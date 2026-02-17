@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Mic, Zap, EyeOff, Shield, CheckCircle, ChevronRight, Lock, Activity, MousePointer2, X, Loader2 } from 'lucide-react';
+import { Mic, Zap, EyeOff, Shield, CheckCircle, ChevronRight, Lock, Activity, MousePointer2, X, Loader2, Database, Layout, Server } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const App = () => {
@@ -89,7 +89,7 @@ const App = () => {
           Lançamento Oficial: Q2 2026
         </p>
 
-        {/* Demonstração Animada */}
+        {/* Demonstração Animada Responsiva */}
         <div className="mt-24">
           <DemoAnimation />
         </div>
@@ -133,9 +133,8 @@ const App = () => {
 // --- COMPONENTE DO MODAL DE WAITLIST ---
 const WaitlistModal = ({ isOpen, onClose }) => {
   const [email, setEmail] = useState("");
-  const [status, setStatus] = useState("idle"); // idle, loading, success, error
+  const [status, setStatus] = useState("idle"); 
 
-  // SEU ENDPOINT REAL AQUI:
   const FORMSPREE_ENDPOINT = "https://formspree.io/f/xkovbaqw"; 
 
   const handleSubmit = async (e) => {
@@ -164,14 +163,11 @@ const WaitlistModal = ({ isOpen, onClose }) => {
     <AnimatePresence>
       {isOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center px-4">
-          {/* Backdrop */}
           <motion.div 
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             onClick={onClose}
             className="absolute inset-0 bg-black/80 backdrop-blur-sm"
           />
-          
-          {/* Janela Modal */}
           <motion.div 
             initial={{ opacity: 0, scale: 0.95, y: 20 }} 
             animate={{ opacity: 1, scale: 1, y: 0 }} 
@@ -181,7 +177,6 @@ const WaitlistModal = ({ isOpen, onClose }) => {
             <button onClick={onClose} className="absolute top-4 right-4 text-slate-500 hover:text-white">
               <X size={20} />
             </button>
-
             {status === "success" ? (
               <div className="text-center py-8">
                 <div className="w-16 h-16 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -197,28 +192,18 @@ const WaitlistModal = ({ isOpen, onClose }) => {
                   <h3 className="text-2xl font-bold text-white mb-2">Acesso Antecipado</h3>
                   <p className="text-slate-400 text-sm">O Vesper está sendo liberado em lotes para garantir a estabilidade. Garanta seu lugar.</p>
                 </div>
-
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div>
                     <input 
-                      type="email" 
-                      required
-                      placeholder="seu@email.com"
-                      value={email}
+                      type="email" required placeholder="seu@email.com" value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       className="w-full bg-[#0B0F19] border border-white/10 rounded-lg px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500 transition-colors"
                     />
                   </div>
-                  <button 
-                    type="submit" 
-                    disabled={status === "loading"}
-                    className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
-                  >
+                  <button type="submit" disabled={status === "loading"} className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50">
                     {status === "loading" ? <Loader2 size={18} className="animate-spin" /> : "Entrar na Lista"}
                   </button>
-                  {status === "error" && (
-                    <p className="text-red-400 text-xs text-center">Erro ao enviar. Tente novamente.</p>
-                  )}
+                  {status === "error" && <p className="text-red-400 text-xs text-center">Erro ao enviar. Tente novamente.</p>}
                 </form>
               </>
             )}
@@ -229,24 +214,78 @@ const WaitlistModal = ({ isOpen, onClose }) => {
   );
 };
 
+// --- COMPONENTE DE ANIMAÇÃO CÍCLICA (RESPONSIVO E MULTI-CENÁRIO) ---
 const DemoAnimation = () => {
-  const [stage, setStage] = useState(0);
+  const [stage, setStage] = useState(0); // 0: Listen, 1: Question, 2: Suggestion
+  const [scenarioIdx, setScenarioIdx] = useState(0);
+
+  // Lista de Cenários Diferentes
+  const scenarios = [
+    {
+      type: "BACKEND",
+      icon: <Server size={14} />,
+      question: "Explique como lidaria com Race Conditions em um sistema distribuído.",
+      context: "github.com/user/payment-api/src/transactions.go",
+      suggestions: [
+        "Use **Redis Locks (Redlock)** para garantir atomicidade.",
+        "Mencione a estratégia de **Optimistic Concurrency** no Postgres.",
+        "Cite o arquivo `inventory.go` onde você usou Mutex."
+      ]
+    },
+    {
+      type: "FRONTEND",
+      icon: <Layout size={14} />,
+      question: "Como você otimizaria a performance deste Dashboard React lento?",
+      context: "github.com/user/admin-panel/src/components/Chart.tsx",
+      suggestions: [
+        "Implemente **React.memo** e **useCallback** nas tabelas.",
+        "Virtualize a lista de dados usando **react-window**.",
+        "Mova o cálculo pesado do gráfico para um **Web Worker**."
+      ]
+    },
+    {
+      type: "DATABASE",
+      icon: <Database size={14} />,
+      question: "Temos uma query SQL demorando 15s. Como você investiga?",
+      context: "github.com/user/ecommerce-db/migrations/V2_users.sql",
+      suggestions: [
+        "Use `EXPLAIN ANALYZE` para verificar **Full Table Scans**.",
+        "Sugira criar um **Índice Composto** (user_id, status).",
+        "Mencione que no projeto passado você usou **Particionamento**."
+      ]
+    }
+  ];
+
+  const currentScenario = scenarios[scenarioIdx];
 
   useEffect(() => {
-    const cycle = () => {
+    const runCycle = () => {
+      // 0s: Começa Ouvindo (Stage 0 já setado)
+      
+      // 3s: Detecta Pergunta
       setTimeout(() => setStage(1), 3000); 
+      
+      // 5s: Mostra Sugestão
       setTimeout(() => setStage(2), 5000);
-      setTimeout(() => setStage(0), 12000);
+      
+      // 11.5s: Troca o cenário (invisivelmente, enquanto ainda mostra a resposta anterior ou fade out)
+      // 12s: Reseta para Ouvindo (Stage 0) e Inicia novo ciclo
+      setTimeout(() => {
+        setStage(0);
+        setScenarioIdx((prev) => (prev + 1) % scenarios.length);
+      }, 12000);
     };
     
-    cycle(); 
-    const interval = setInterval(cycle, 12000); 
+    runCycle(); // Primeiro ciclo imediato
+    const interval = setInterval(runCycle, 12000); // Loop infinito
     return () => clearInterval(interval);
-  }, []);
+  }, [scenarios.length]);
 
   return (
-    <div className="relative mx-auto max-w-5xl rounded-xl border border-white/10 bg-[#0B0F19]/80 backdrop-blur-md shadow-2xl overflow-hidden h-[400px]">
-      <div className="h-10 bg-[#151925] border-b border-white/5 flex items-center px-4 gap-2 justify-between">
+    <div className="relative mx-auto max-w-5xl rounded-xl border border-white/10 bg-[#0B0F19]/80 backdrop-blur-md shadow-2xl overflow-hidden h-auto md:h-[400px] flex flex-col">
+      
+      {/* Header Fixo */}
+      <div className="h-10 bg-[#151925] border-b border-white/5 flex items-center px-4 gap-2 justify-between shrink-0">
         <div className="flex gap-1.5">
             <div className="w-3 h-3 rounded-full bg-slate-700"></div>
             <div className="w-3 h-3 rounded-full bg-slate-700"></div>
@@ -260,8 +299,11 @@ const DemoAnimation = () => {
         <div className="w-4"></div>
       </div>
 
-      <div className="p-12 h-full grid md:grid-cols-2 gap-12 text-left relative">
-        <div className="space-y-6 flex flex-col justify-center">
+      {/* Corpo */}
+      <div className="p-6 md:p-12 h-full flex flex-col md:grid md:grid-cols-2 gap-8 md:gap-12 text-left relative">
+        
+        {/* Esquerda: Entrevistador */}
+        <div className="space-y-6 flex flex-col justify-center min-h-[120px]">
           <AnimatePresence mode="wait">
             {stage === 0 ? (
                <motion.div 
@@ -270,7 +312,7 @@ const DemoAnimation = () => {
                  className="flex flex-col items-start gap-4"
                >
                  <div className="flex items-center gap-3 text-indigo-400 text-sm font-semibold uppercase tracking-wider">
-                    <Mic size={16} className="animate-pulse" /> Escutando Entrevista...
+                    <Mic size={16} className="animate-pulse" /> Escutando...
                  </div>
                  <div className="flex gap-1 h-8 items-end">
                     {[1,2,3,4,5].map(i => (
@@ -286,25 +328,32 @@ const DemoAnimation = () => {
             ) : (
                <motion.div 
                  key="question"
-                 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+                 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
                  className="space-y-2"
                >
-                 <span className="text-xs text-slate-500 uppercase tracking-wider font-bold">Entrevistador Perguntou:</span>
-                 <h3 className="text-2xl text-white font-medium leading-relaxed">
-                    "Explique como você lidaria com Race Conditions em um sistema distribuído."
+                 <span className="text-xs text-slate-500 uppercase tracking-wider font-bold flex items-center gap-2">
+                   Entrevistador 
+                   <span className="px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 text-[10px] flex items-center gap-1">
+                     {currentScenario.icon} {currentScenario.type}
+                   </span>
+                 </span>
+                 <h3 className="text-xl md:text-2xl text-white font-medium leading-relaxed">
+                    "{currentScenario.question}"
                  </h3>
                </motion.div>
             )}
           </AnimatePresence>
         </div>
 
-        <div className="flex flex-col justify-center">
-          <AnimatePresence>
+        {/* Direita: Resposta */}
+        <div className="flex flex-col justify-center pb-6 md:pb-0 min-h-[180px]">
+          <AnimatePresence mode="wait">
             {stage === 2 && (
               <motion.div 
-                initial={{ x: 50, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                exit={{ x: 50, opacity: 0 }}
+                key={scenarioIdx} // Força re-render ao mudar de cenário
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: 20, opacity: 0 }}
                 transition={{ type: "spring", stiffness: 100 }}
                 className="bg-[#1A1F2E] rounded-lg p-6 border border-indigo-500/20 shadow-[0_0_30px_-5px_rgba(99,102,241,0.1)] relative"
               >
@@ -312,32 +361,21 @@ const DemoAnimation = () => {
                    <Zap size={10} fill="currentColor"/> SUGESTÃO
                 </div>
                 
-                <div className="mb-4 text-xs text-slate-500 font-mono border-b border-white/5 pb-2">
-                   Contexto: github.com/user/payment-api
+                <div className="mb-4 text-xs text-slate-500 font-mono border-b border-white/5 pb-2 truncate">
+                   Contexto: {currentScenario.context}
                 </div>
 
-                <ul className="space-y-4 text-slate-300 text-sm leading-relaxed">
-                    <motion.li 
-                      initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 }}
-                      className="flex gap-3"
-                    >
-                        <CheckCircle size={16} className="text-emerald-400 shrink-0 mt-0.5" />
-                        <span>Cite o uso de <strong>Redis Locks (Redlock)</strong> para garantir atomicidade entre microsserviços.</span>
-                    </motion.li>
-                    <motion.li 
-                      initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 }}
-                      className="flex gap-3"
-                    >
-                        <CheckCircle size={16} className="text-emerald-400 shrink-0 mt-0.5" />
-                        <span>Mencione a estratégia de <strong>Optimistic Concurrency Control</strong> (versionamento no DB).</span>
-                    </motion.li>
-                    <motion.li 
-                      initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.5 }}
-                      className="flex gap-3"
-                    >
-                        <CheckCircle size={16} className="text-emerald-400 shrink-0 mt-0.5" />
-                        <span>Dê exemplo do arquivo <code>inventory.go</code> do seu projeto.</span>
-                    </motion.li>
+                <ul className="space-y-3 text-slate-300 text-sm leading-relaxed">
+                    {currentScenario.suggestions.map((sug, i) => (
+                      <motion.li 
+                        key={i}
+                        initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 + (i * 0.2) }}
+                        className="flex gap-3"
+                      >
+                          <CheckCircle size={16} className="text-emerald-400 shrink-0 mt-0.5" />
+                          <span dangerouslySetInnerHTML={{ __html: formatSuggestion(sug) }}></span>
+                      </motion.li>
+                    ))}
                 </ul>
               </motion.div>
             )}
@@ -347,6 +385,12 @@ const DemoAnimation = () => {
     </div>
   );
 };
+
+// Helper para renderizar negrito no texto
+const formatSuggestion = (text) => {
+  return text.replace(/\*\*(.*?)\*\*/g, '<strong class="text-white font-semibold">$1</strong>')
+             .replace(/`(.*?)`/g, '<code class="bg-slate-800 px-1 rounded text-xs border border-slate-700">$1</code>');
+}
 
 const FeatureCard = ({ icon, title, desc }) => (
   <div className="p-8 rounded-2xl bg-[#131825] border border-white/5 hover:border-white/10 transition-all hover:-translate-y-1">
