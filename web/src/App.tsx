@@ -14,7 +14,7 @@ const App = () => {
         <div className="absolute bottom-[-10%] right-[-10%] w-[600px] h-[600px] bg-purple-900/10 rounded-full blur-[100px] opacity-30" />
       </div>
 
-      {/* Navbar */}
+      {/* Navbar (LIMPA) */}
       <nav className="fixed w-full z-50 border-b border-white/5 bg-[#0B0F19]/80 backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-6 h-20 flex justify-between items-center">
           <div className="flex items-center gap-2 font-bold text-xl tracking-tight text-white">
@@ -23,10 +23,9 @@ const App = () => {
             </div>
             VESPER<span className="text-indigo-500">.AI</span>
           </div>
-          <div className="hidden md:flex gap-8 text-sm font-medium text-slate-400">
-            <a href="#how" className="hover:text-white transition-colors">Como Funciona</a>
-            <a href="#features" className="hover:text-white transition-colors">Ghost Mode</a>
-          </div>
+          
+          {/* Links removidos aqui */}
+
           <button disabled className="px-5 py-2.5 rounded-full bg-white/5 border border-white/10 text-slate-500 text-sm font-medium cursor-not-allowed flex items-center gap-2">
             <Lock size={12} /> Acesso Restrito
           </button>
@@ -260,24 +259,17 @@ const DemoAnimation = () => {
 
   useEffect(() => {
     const runCycle = () => {
-      // 0s: Começa Ouvindo (Stage 0 já setado)
-      
-      // 3s: Detecta Pergunta
       setTimeout(() => setStage(1), 3000); 
-      
-      // 5s: Mostra Sugestão
       setTimeout(() => setStage(2), 5000);
       
-      // 11.5s: Troca o cenário (invisivelmente, enquanto ainda mostra a resposta anterior ou fade out)
-      // 12s: Reseta para Ouvindo (Stage 0) e Inicia novo ciclo
       setTimeout(() => {
         setStage(0);
         setScenarioIdx((prev) => (prev + 1) % scenarios.length);
       }, 12000);
     };
     
-    runCycle(); // Primeiro ciclo imediato
-    const interval = setInterval(runCycle, 12000); // Loop infinito
+    runCycle(); 
+    const interval = setInterval(runCycle, 12000); 
     return () => clearInterval(interval);
   }, [scenarios.length]);
 
